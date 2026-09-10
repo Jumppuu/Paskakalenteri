@@ -653,7 +653,7 @@ button svg,
 
 .week-list {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 3fr));
   border-top: 1px solid var(--border);
 }
 .week-day {
@@ -712,7 +712,9 @@ button svg,
   cursor: pointer;
   display: flex;
   opacity: 0;
-  transition: opacity 0.12s ease, color 0.12s ease;
+  transition:
+    opacity 0.12s ease,
+    color 0.12s ease;
 }
 .week-day-header:hover .week-add {
   opacity: 1;
@@ -734,11 +736,23 @@ button svg,
   border-radius: 10px;
   padding: 5px 14px;
   transition: box-shadow 0.15s;
+  flex-direction: row;
 }
 
-@media (min-width: 821px) and (max-width: 1550px) {
+@media (min-width: 1500px) and (max-width: 1950px) {
+  .week-list {
+    grid-template-columns: repeat(3, minmax(0, 3fr));
+  }
+}
+
+@media (min-width: 321px) and (max-width: 1499px) {
   .task-card {
-    flex-direction: column;
+    flex-direction: row;
+  }
+  .week-list {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 3fr));
+    border-top: 1px solid var(--border);
   }
 }
 
