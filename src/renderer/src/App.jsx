@@ -292,13 +292,6 @@ export default function App() {
     showToast(t('toast.courseDeleted'))
   }
 
-  function wipeAll() {
-    if (!confirm(t('confirm.wipeAll'))) return
-    setState({ courses: [], assignments: [] })
-    showToast(t('toast.allDataCleared'))
-    goView('calendar')
-  }
-
   function shiftCal(dir) {
     const next = new Date(cursor)
     if (calMode === 'month') next.setMonth(next.getMonth() + dir)
@@ -352,6 +345,13 @@ export default function App() {
               <span>{t('nav.courses')}</span>
             </button>
           </nav>
+          <button
+            className={`nav-btn ${view === 'notes' ? 'active' : ''}`}
+            onClick={() => goView('notes')}
+          >
+            <Notebook/>
+              <span>{t('nav.notes')}</span>
+          </button>
           <button className="add-btn" onClick={() => openAssignment()}>
             <span>＋</span> <span>{t('nav.addTask')}</span>
           </button>

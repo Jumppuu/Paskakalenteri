@@ -1,5 +1,6 @@
 import { formatTerm } from '../utils'
 import { useLang } from '../LangContext'
+import { Settings } from 'lucide-react'
 
 export default function CoursesView({ state, sortedCourses, onOpen, onAdd }) {
   const { t } = useLang()
@@ -34,15 +35,8 @@ export default function CoursesView({ state, sortedCourses, onOpen, onAdd }) {
             <div className="course-count">
               {t('course.stats', { open: openCount, total: count })}
             </div>
-            <button
-              onClick={() => onOpen(c.id)}
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => onOpen(c.id)}
-            >
-              Edit
+            <button className="course-editButton" onClick={() => onOpen(c.id)}>
+              <Settings />
             </button>
           </div>
         )

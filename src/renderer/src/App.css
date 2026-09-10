@@ -634,7 +634,7 @@ button svg,
   font-size: 11.5px;
   font-weight: 600;
   padding: 3px 6px;
-  border-radius: 5px; 
+  border-radius: 5px;
   color: #fff;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -845,7 +845,7 @@ button svg,
 }
 .course-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 160px 160px 50px 50px;
+  grid-template-columns: minmax(0, 1fr) 160px 160px 50px;
   gap: 20px;
   align-items: center;
   background: transparent;
@@ -871,6 +871,17 @@ button svg,
 .course-count {
   font-size: 13px;
   color: var(--text-muted);
+}
+
+.course-editButton {
+  width: 35px;
+  height: 35px;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+  color: var(--text);
+  background-color: transparent;
+  border: none;
 }
 
 /* ---------- Modaali ---------- */
