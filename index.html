@@ -1,13 +1,188 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fi">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#276653" />
-  <title>Kurssikalenteri</title>
-</head>
-<body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#4f46e5" />
+    <title>Kurssikalenteri</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <!-- Sivupalkki / navigointi -->
+      <aside class="sidebar" id="sidebar">
+        <div class="brand">
+          <span class="brand-icon">📚</span>
+          <span class="brand-text">Kurssikalenteri</span>
+        </div>
+        <nav class="nav">
+          <button class="nav-btn active" data-view="calendar">
+            <span class="nav-icon">📅</span> Kalenteri
+          </button>
+          <button class="nav-btn" data-view="tasks">
+            <span class="nav-icon">✅</span> Tehtävät
+            <span class="nav-badge" id="tasksBadge" hidden></span>
+          </button>
+          <button class="nav-btn" data-view="courses">
+            <span class="nav-icon">🎨</span> Kurssit
+          </button>
+        </nav>
+        <button class="add-btn" id="quickAddBtn"><span>＋</span> Lisää tehtävä</button>
+        <button class="wipe-btn" id="wipeBtn"><span>🗑️</span> Tyhjennä kaikki</button>
+        <div class="sidebar-footer">
+          <button
+            class="cog-btn"
+            id="settingsBtn"
+            data-view="settings"
+            title="Asetukset"
+            aria-label="Asetukset"
+          >
+            ⚙️
+          </button>
+          <button
+            class="cog-btn collapse-btn"
+            id="collapseBtn"
+            title="Pienennä valikko"
+            aria-label="Pienennä valikko"
+          >
+            «
+          </button>
+        </div>
+      </aside>
+
+      <!-- Pääsisältö -->
+      <main class="content">
+        <header class="topbar">
+          <button class="icon-btn menu-toggle" id="menuToggle" aria-label="Valikko">☰</button>
+          <h1 class="page-title" id="pageTitle">Kalenteri</h1>
+          <div class="topbar-actions" id="topbarActions"></div>
+          <button
+            class="icon-btn theme-toggle"
+            id="themeToggle"
+            aria-label="Vaihda teema"
+            title="Vaihda vaalea/tumma"
+          >
+            ☀️
+          </button>
+        </header>
+
+        <!-- Näkymät ladataan tähän -->
+        <section class="view" id="view"></section>
+      </main>
+    </div>
+
+    <!-- Tehtävän lisäys/muokkaus -modaali -->
+    <div class="modal-overlay" id="modalOverlay" hidden>
+      <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <h2 id="modalTitle">Uusi tehtävä</h2>
+          <button class="icon-btn" id="modalClose" aria-label="Sulje">✕</button>
+        </div>
+        <form id="assignmentForm" class="modal-body">
+          <input type="hidden" id="assignmentId" />
+
+          <label class="field">
+            <span>Otsikko *</span>
+            <input type="text" id="fTitle" required placeholder="esim. Matematiikan tehtävät 3" />
+          </label>
+
+          <label class="field">
+            <span>Kurssi *</span>
+            <select id="fCourse" required></select>
+          </label>
+
+          <div class="field-row">
+            <label class="field">
+              <span>Määräpäivä *</span>
+              <input type="date" id="fDate" required />
+            </label>
+            <label class="field">
+              <span>Kellonaika</span>
+              <input type="time" id="fTime" value="23:59" />
+            </label>
+          </div>
+
+          <div class="field-row">
+            <label class="field">
+              <span>Prioriteetti</span>
+              <select id="fPriority">
+                <option value="low">Matala</option>
+                <option value="normal" selected>Normaali</option>
+                <option value="high">Korkea</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Tila</span>
+              <select id="fStatus">
+                <option value="todo" selected>Tekemättä</option>
+                <option value="doing">Työn alla</option>
+                <option value="done">Valmis</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Toisto</span>
+            <select id="fRepeat">
+              <option value="none" selected>Ei toistoa</option>
+              <option value="weekly">Viikoittain</option>
+              <option value="biweekly">Joka toinen viikko</option>
+            </select>
+          </label>
+
+          <label class="field" id="repeatCountWrap" hidden>
+            <span>Montako kertaa toistetaan</span>
+            <input type="number" id="fRepeatCount" min="1" max="30" value="8" />
+          </label>
+
+          <label class="field">
+            <span>Kuvaus / muistiinpanot</span>
+            <textarea id="fDescription" rows="3" placeholder="Vapaaehtoiset ohjeet…"></textarea>
+          </label>
+
+          <div class="modal-footer">
+            <button type="button" class="btn ghost" id="deleteBtn" hidden>Poista</button>
+            <div class="spacer"></div>
+            <button type="button" class="btn" id="cancelBtn">Peruuta</button>
+            <button type="submit" class="btn primary">Tallenna</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Kurssin lisäys -modaali -->
+    <div class="modal-overlay" id="courseModalOverlay" hidden>
+      <div class="modal small" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <h2 id="courseModalTitle">Uusi kurssi</h2>
+          <button class="icon-btn" id="courseModalClose" aria-label="Sulje">✕</button>
+        </div>
+        <form id="courseForm" class="modal-body">
+          <input type="hidden" id="courseId" />
+          <label class="field">
+            <span>Kurssin nimi *</span>
+            <input type="text" id="cName" required placeholder="esim. Kemia" />
+          </label>
+          <label class="field">
+            <span>Lukukausi</span>
+            <select id="cTerm"></select>
+          </label>
+          <label class="field">
+            <span>Väri</span>
+            <div class="color-picker" id="colorPicker"></div>
+          </label>
+          <div class="modal-footer">
+            <button type="button" class="btn ghost" id="courseDeleteBtn" hidden>Poista</button>
+            <div class="spacer"></div>
+            <button type="button" class="btn" id="courseCancelBtn">Peruuta</button>
+            <button type="submit" class="btn primary">Tallenna</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" hidden></div>
+
+    <script src="app.js"></script>
+  </body>
 </html>
