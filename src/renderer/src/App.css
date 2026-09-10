@@ -1130,6 +1130,20 @@ button svg,
   gap: 10px;
 }
 
+/* ---------- Notes ----------*/
+
+.note-card {
+  display: flex;
+  margin: 20px;
+  padding: 10px;
+  padding-top: 0px;
+  background-color: #22222209;
+  border-radius: 1rem;
+}
+
+.note-card-content {
+}
+
 /* ---------- Toast ---------- */
 .toast {
   position: fixed;

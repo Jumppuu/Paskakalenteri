@@ -9,14 +9,19 @@ export function loadState() {
   if (raw) {
     try {
       const parsed = JSON.parse(raw)
-      if (parsed && Array.isArray(parsed.courses) && Array.isArray(parsed.assignments)) {
+      if (
+        parsed &&
+        Array.isArray(parsed.courses) &&
+        Array.isArray(parsed.assignments) &&
+        Array.isArray(parsed.notes)
+      ) {
         return parsed
       }
     } catch {
       /* fall through */
     }
   }
-  return { courses: [], assignments: [] }
+  return { courses: [], assignments: [], notes: [] }
 }
 
 export function saveState(state) {
@@ -34,5 +39,5 @@ export function importString(code) {
   if (!data || !Array.isArray(data.courses) || !Array.isArray(data.assignments)) {
     throw new Error('invalid')
   }
-  return { courses: data.courses, assignments: data.assignments }
+  return { courses: data.courses, assignments: data.assignments, notes: data.notes }
 }

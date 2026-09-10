@@ -6,10 +6,12 @@ import { LangContext } from './LangContext'
 import { courseById } from './components/helpers'
 import CalendarView from './components/CalendarView'
 import TasksView from './components/TasksView'
+import { NotesView } from './components/NotesView'
 import CoursesView from './components/CoursesView'
 import SettingsView from './components/SettingsView'
 import AssignmentModal from './components/AssignmentModal'
 import CourseModal from './components/CourseModal'
+import NotesModal from './components/NotesModal'
 import {
   Notebook,
   CalendarDays,
@@ -46,7 +48,9 @@ export default function App() {
     const saved = localStorage.getItem(LANG_KEY)
     return I18N[saved] ? saved : 'fi'
   })
+
   const [assignmentModal, setAssignmentModal] = useState(null)
+  const [notesModal, setNotesModal] = useState(null)
   const [courseModal, setCourseModal] = useState(null)
 
   const t = useMemo(() => makeT(lang), [lang])
@@ -78,7 +82,9 @@ export default function App() {
 
   useEffect(() => {
     if (!toast) return
+
     const timer = setTimeout(() => setToast(''), 2200)
+
     return () => clearTimeout(timer)
   }, [toast])
 
@@ -87,9 +93,12 @@ export default function App() {
       if (e.key === 'Escape') {
         setAssignmentModal(null)
         setCourseModal(null)
+        setNotesModal(null)
       }
     }
+
     document.addEventListener('keydown', onKey)
+
     return () => document.removeEventListener('keydown', onKey)
   }, [])
 
@@ -98,13 +107,21 @@ export default function App() {
     [state.courses, lang]
   )
 
+  const sortedNotes = useMemo(
+    () =>
+      [...(state.notes || [])].sort((a, b) => (a.title || '').localeCompare(b.title || '', lang)),
+    [state.notes, lang]
+  )
+
   const overdueCount = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
+
     return state.assignments.filter((a) => a.status !== 'done' && parseDate(a.date) <= today).length
   }, [state.assignments])
 
-  const isNewUser = !state.courses.length && !state.assignments.length
+  const isNewUser = !state.courses.length && !state.assignments.length && !state.notes.length
+
   const showWelcome = !welcomeDismissed && isNewUser
 
   function showToast(msg) {
@@ -116,16 +133,140 @@ export default function App() {
     setSidebarOpen(false)
   }
 
+  // =========================
+  // NOTES
+  // =========================
+
+  function openNote(id = null, presetDate = null) {
+    if (id) {
+      const n = state.notes.find((x) => x.id === id)
+
+      if (!n) return
+
+      setNotesModal({
+        ...n,
+        courseId: n.courseId || '',
+        color: n.color || courseById(state.courses, n.courseId)?.color || COLORS[0],
+        savedAt: n.savedAt || null,
+        isEdit: true
+      })
+
+      return
+    }
+
+    const defaultCourse =
+      lastCourseId && courseById(state.courses, lastCourseId)
+        ? lastCourseId
+        : state.courses[0]?.id || ''
+
+    const defaultCourseObject = courseById(state.courses, defaultCourse)
+
+    setNotesModal({
+      id: '',
+      title: '',
+      courseId: defaultCourse,
+      color: defaultCourseObject?.color || COLORS[0],
+      date: presetDate || toISODate(new Date()),
+      time: '23:59',
+      description: '',
+      savedAt: null,
+      isEdit: false
+    })
+  }
+
+  function saveNote(e) {
+    e.preventDefault()
+
+    const form = notesModal
+
+    if (!form?.title?.trim() || !form.date) return
+
+    const now = new Date().toISOString()
+
+    const selectedCourse = courseById(state.courses, form.courseId)
+
+    const noteData = {
+      title: form.title.trim(),
+      courseId: form.courseId || '',
+      color: selectedCourse?.color || form.color || COLORS[0],
+      date: form.date,
+      time: form.time || '23:59',
+      description: (form.description || '').trim(),
+      savedAt: now
+    }
+
+    if (form.isEdit) {
+      setState((s) => ({
+        ...s,
+        notes: s.notes.map((n) =>
+          n.id === form.id
+            ? {
+                ...n,
+                ...noteData
+              }
+            : n
+        )
+      }))
+
+      showToast(t('toast.noteSaved'))
+    } else {
+      const note = {
+        id: uid(),
+        ...noteData
+      }
+
+      setState((s) => ({
+        ...s,
+        notes: [...s.notes, note]
+      }))
+
+      showToast(t('toast.noteAdded'))
+    }
+
+    if (form.courseId) {
+      setLastCourseId(form.courseId)
+    }
+
+    setNotesModal(null)
+  }
+
+  function deleteNote() {
+    const form = notesModal
+
+    if (!form?.id) return
+
+    setState((s) => ({
+      ...s,
+      notes: s.notes.filter((n) => n.id !== form.id)
+    }))
+
+    setNotesModal(null)
+
+    showToast(t('toast.noteDeleted'))
+  }
+
+  // =========================
+  // ASSIGNMENTS
+  // =========================
+
   function openAssignment(id = null, presetDate = null) {
     if (!state.courses.length) {
       showToast(t('toast.addCourseFirst'))
       goView('courses')
       return
     }
+
     if (id) {
       const a = state.assignments.find((x) => x.id === id)
+
       if (!a) return
-      setAssignmentModal({ ...a, repeat: 'none', repeatCount: 8, isEdit: true })
+
+      setAssignmentModal({
+        ...a,
+        repeat: 'none',
+        repeatCount: 8,
+        isEdit: true
+      })
     } else {
       setAssignmentModal({
         id: '',
@@ -148,9 +289,13 @@ export default function App() {
 
   function saveAssignment(e) {
     e.preventDefault()
+
     const form = assignmentModal
+
     if (!form.title.trim() || !form.date) return
+
     setLastCourseId(form.courseId)
+
     if (form.isEdit) {
       setState((s) => ({
         ...s,
@@ -169,6 +314,7 @@ export default function App() {
             : a
         )
       }))
+
       showToast(t('toast.taskSaved'))
     } else {
       const base = {
@@ -180,34 +326,54 @@ export default function App() {
         status: form.status,
         description: form.description.trim()
       }
+
       if (form.repeat === 'none') {
         setState((s) => ({
           ...s,
-          assignments: [...s.assignments, { id: uid(), ...base, repeatGroup: null }]
+          assignments: [
+            ...s.assignments,
+            {
+              id: uid(),
+              ...base,
+              repeatGroup: null
+            }
+          ]
         }))
+
         showToast(t('toast.taskAdded'))
       } else {
         const count = Math.min(30, Math.max(1, parseInt(form.repeatCount, 10) || 1))
+
         const step = form.repeat === 'weekly' ? 7 : 14
         const groupId = uid()
         const start = parseDate(base.date)
+
         const created = Array.from({ length: count }, (_, i) => ({
           id: uid(),
           ...base,
           date: toISODate(addDays(start, i * step)),
           repeatGroup: groupId
         }))
-        setState((s) => ({ ...s, assignments: [...s.assignments, ...created] }))
+
+        setState((s) => ({
+          ...s,
+          assignments: [...s.assignments, ...created]
+        }))
+
         showToast(t('toast.recurringCreated', { count }))
       }
     }
+
     setAssignmentModal(null)
   }
 
   function deleteAssignment() {
     const form = assignmentModal
+
     if (!form?.id) return
+
     const a = state.assignments.find((x) => x.id === form.id)
+
     if (a?.repeatGroup) {
       if (confirm(t('confirm.deleteRecurring'))) {
         setState((s) => ({
@@ -215,12 +381,20 @@ export default function App() {
           assignments: s.assignments.filter((x) => x.repeatGroup !== a.repeatGroup)
         }))
       } else {
-        setState((s) => ({ ...s, assignments: s.assignments.filter((x) => x.id !== form.id) }))
+        setState((s) => ({
+          ...s,
+          assignments: s.assignments.filter((x) => x.id !== form.id)
+        }))
       }
     } else {
-      setState((s) => ({ ...s, assignments: s.assignments.filter((x) => x.id !== form.id) }))
+      setState((s) => ({
+        ...s,
+        assignments: s.assignments.filter((x) => x.id !== form.id)
+      }))
     }
+
     setAssignmentModal(null)
+
     showToast(t('toast.taskDeleted'))
   }
 
@@ -228,18 +402,34 @@ export default function App() {
     setState((s) => ({
       ...s,
       assignments: s.assignments.map((a) =>
-        a.id === id ? { ...a, status: a.status === 'done' ? 'todo' : 'done' } : a
+        a.id === id
+          ? {
+              ...a,
+              status: a.status === 'done' ? 'todo' : 'done'
+            }
+          : a
       )
     }))
+
     const a = state.assignments.find((x) => x.id === id)
+
     showToast(a?.status === 'done' ? t('task.markUndone') : t('task.markDone'))
   }
+
+  // =========================
+  // COURSES
+  // =========================
 
   function openCourse(id = null) {
     if (id) {
       const c = courseById(state.courses, id)
+
       if (!c) return
-      setCourseModal({ ...c, isEdit: true })
+
+      setCourseModal({
+        ...c,
+        isEdit: true
+      })
     } else {
       setCourseModal({
         id: '',
@@ -253,49 +443,84 @@ export default function App() {
 
   function saveCourse(e) {
     e.preventDefault()
+
     const form = courseModal
+
     if (!form.name.trim()) return
+
     if (form.isEdit) {
       setState((s) => ({
         ...s,
         courses: s.courses.map((c) =>
           c.id === form.id
-            ? { ...c, name: form.name.trim(), term: form.term, color: form.color }
+            ? {
+                ...c,
+                name: form.name.trim(),
+                term: form.term,
+                color: form.color
+              }
             : c
         )
       }))
+
       showToast(t('toast.courseSaved'))
     } else {
       setState((s) => ({
         ...s,
         courses: [
           ...s.courses,
-          { id: uid(), name: form.name.trim(), term: form.term, color: form.color }
+          {
+            id: uid(),
+            name: form.name.trim(),
+            term: form.term,
+            color: form.color
+          }
         ]
       }))
+
       showToast(t('toast.courseAdded'))
     }
+
     setCourseModal(null)
   }
 
   function deleteCourse() {
     const form = courseModal
+
     if (!form?.id) return
+
     const count = state.assignments.filter((a) => a.courseId === form.id).length
-    if (!confirm(count ? t('confirm.deleteCourseWithTasks', { count }) : t('confirm.deleteCourse')))
+
+    if (
+      !confirm(count ? t('confirm.deleteCourseWithTasks', { count }) : t('confirm.deleteCourse'))
+    ) {
       return
+    }
+
     setState((s) => ({
+      ...s,
       courses: s.courses.filter((c) => c.id !== form.id),
       assignments: s.assignments.filter((a) => a.courseId !== form.id)
     }))
+
     setCourseModal(null)
+
     showToast(t('toast.courseDeleted'))
   }
 
+  // =========================
+  // CALENDAR
+  // =========================
+
   function shiftCal(dir) {
     const next = new Date(cursor)
-    if (calMode === 'month') next.setMonth(next.getMonth() + dir)
-    else next.setDate(next.getDate() + dir * 7)
+
+    if (calMode === 'month') {
+      next.setMonth(next.getMonth() + dir)
+    } else {
+      next.setDate(next.getDate() + dir * 7)
+    }
+
     setCursor(next)
   }
 
@@ -303,6 +528,7 @@ export default function App() {
     calendar: t('nav.calendar'),
     tasks: t('nav.tasks'),
     courses: t('nav.courses'),
+    notes: t('nav.notes'),
     settings: t('nav.settings')
   }
 
@@ -315,6 +541,7 @@ export default function App() {
             <Notebook />
             <span className="brand-text">{t('brand')}</span>
           </div>
+
           <nav className="nav">
             <button
               className={`nav-btn ${view === 'calendar' ? 'active' : ''}`}
@@ -323,20 +550,25 @@ export default function App() {
               <CalendarDays />
               <span>{t('nav.calendar')}</span>
             </button>
+
             <button
               className={`nav-btn ${view === 'tasks' ? 'active' : ''}`}
               onClick={() => goView('tasks')}
             >
               <ListChecks />
               <span>{t('nav.tasks')}</span>
+
               <span
                 className="nav-badge"
                 hidden={overdueCount === 0}
-                title={t('badge.overdueOrToday', { count: overdueCount })}
+                title={t('badge.overdueOrToday', {
+                  count: overdueCount
+                })}
               >
                 {overdueCount}
               </span>
             </button>
+
             <button
               className={`nav-btn ${view === 'courses' ? 'active' : ''}`}
               onClick={() => goView('courses')}
@@ -344,17 +576,21 @@ export default function App() {
               <BookOpen />
               <span>{t('nav.courses')}</span>
             </button>
-          </nav>
-          <button
-            className={`nav-btn ${view === 'notes' ? 'active' : ''}`}
-            onClick={() => goView('notes')}
-          >
-            <Notebook/>
+
+            <button
+              className={`nav-btn ${view === 'notes' ? 'active' : ''}`}
+              onClick={() => goView('notes')}
+            >
+              <Notebook />
               <span>{t('nav.notes')}</span>
-          </button>
+            </button>
+          </nav>
+
           <button className="add-btn" onClick={() => openAssignment()}>
-            <span>＋</span> <span>{t('nav.addTask')}</span>
+            <span>＋</span>
+            <span>{t('nav.addTask')}</span>
           </button>
+
           <div className="sidebar-footer">
             <button
               className={`cog-btn ${view === 'settings' ? 'active' : ''}`}
@@ -364,6 +600,7 @@ export default function App() {
             >
               ⚙️
             </button>
+
             <button
               className="cog-btn collapse-btn"
               title={sidebarCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}
@@ -384,7 +621,9 @@ export default function App() {
             >
               ☰
             </button>
+
             <h1 className="page-title">{titles[view]}</h1>
+
             <div className="topbar-actions">
               {view === 'calendar' && (
                 <div className="view-switch">
@@ -394,6 +633,7 @@ export default function App() {
                   >
                     {t('cal.month')}
                   </button>
+
                   <button
                     className={calMode === 'week' ? 'active' : ''}
                     onClick={() => setCalMode('week')}
@@ -402,17 +642,26 @@ export default function App() {
                   </button>
                 </div>
               )}
+
               {view === 'tasks' && (
                 <button className="btn primary small" onClick={() => openAssignment()}>
                   ＋ {t('nav.addTask')}
                 </button>
               )}
+
               {view === 'courses' && (
                 <button className="btn primary small" onClick={() => openCourse()}>
                   ＋ {t('courses.addCourse')}
                 </button>
               )}
+
+              {view === 'notes' && (
+                <button className="btn primary small" onClick={() => openNote()}>
+                  ＋ Lisää muistiinpano
+                </button>
+              )}
             </div>
+
             <div className="lang-tabs" role="group" aria-label="Language / Kieli">
               <button
                 type="button"
@@ -423,6 +672,7 @@ export default function App() {
               >
                 FI
               </button>
+
               <button
                 type="button"
                 className={`lang-tab ${lang === 'en' ? 'active' : ''}`}
@@ -433,6 +683,7 @@ export default function App() {
                 EN
               </button>
             </div>
+
             <button
               className="icon-btn theme-toggle"
               title={t('theme.toggleTitle')}
@@ -476,6 +727,7 @@ export default function App() {
                 onToggle={toggleDone}
               />
             )}
+
             {view === 'tasks' && (
               <TasksView
                 state={state}
@@ -489,6 +741,7 @@ export default function App() {
                 onAdd={() => openAssignment()}
               />
             )}
+
             {view === 'courses' && (
               <CoursesView
                 state={state}
@@ -497,6 +750,17 @@ export default function App() {
                 onAdd={() => openCourse()}
               />
             )}
+
+            {view === 'notes' && (
+              <NotesView
+                state={state}
+                sortedNotes={sortedNotes}
+                onAdd={() => openNote()}
+                onOpen={openNote}
+                onDelete={deleteNote}
+              />
+            )}
+
             {view === 'settings' && (
               <SettingsView
                 state={state}
@@ -516,12 +780,22 @@ export default function App() {
           onSave={saveAssignment}
           onDelete={deleteAssignment}
         />
+
         <CourseModal
           courseModal={courseModal}
           setCourseModal={setCourseModal}
           onSave={saveCourse}
           onDelete={deleteCourse}
         />
+
+        <NotesModal
+          notesModal={notesModal}
+          setNotesModal={setNotesModal}
+          sortedCourses={sortedCourses}
+          onSave={saveNote}
+          onDelete={deleteNote}
+        />
+
         {toast && <div className="toast">{toast}</div>}
       </div>
     </LangContext.Provider>
