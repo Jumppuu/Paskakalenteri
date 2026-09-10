@@ -657,7 +657,7 @@ export default function App() {
 
               {view === 'notes' && (
                 <button className="btn primary small" onClick={() => openNote()}>
-                  ＋ Lisää muistiinpano
+                  ＋ {t('notes.addNote')}
                 </button>
               )}
             </div>
@@ -755,6 +755,7 @@ export default function App() {
               <NotesView
                 state={state}
                 sortedNotes={sortedNotes}
+                sortedCourses={sortedCourses}
                 onAdd={() => openNote()}
                 onOpen={openNote}
                 onDelete={deleteNote}
