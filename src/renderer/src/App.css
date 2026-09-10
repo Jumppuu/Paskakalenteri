@@ -652,48 +652,48 @@ button svg,
 }
 
 .week-list {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  flex: end;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 1px solid var(--border);
 }
 .week-day {
-  background: var(--surface);
-  border-radius: 0;
-  overflow: hidden;
-
-  border: solid;
-  border-width: 1px 6px 6px 1px;
-  border-radius: 1rem;
-  border-color: var(--surface-2);
-  padding: 0px 6px 6px 0px;
-  max-width: 23%;
-  min-width: 20%;
+  min-height: 120px;
+  border-left: 1px solid var(--border);
+  border-top: 2px solid transparent;
+}
+.week-day:last-child {
+  border-right: 1px solid var(--border);
+}
+.week-day.today {
+  border-top-color: var(--primary);
 }
 .week-day-header {
-  padding: 10px 16px;
-  background: transparent;
-  font-weight: 700;
-  font-size: 16px;
-
-  border-bottom: 1px solid var(--border);
-  border-radius: 10px;
-
+  padding: 6px 8px;
   display: flex;
-  flex-direction: row;
-
+  align-items: flex-start;
   justify-content: space-between;
-  align-content: center;
-  margin-top: 5px;
-  margin-left: 5px;
+  border-bottom: 1px solid var(--border);
 }
-.week-day-header.today {
-  background: var(--primary-soft);
+.week-day-label {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.week-day-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: 0.04em;
+}
+.week-day-date {
+  font-size: 14px;
+  font-weight: 700;
+}
+.week-day.today .week-day-date {
   color: var(--primary);
 }
 .week-day-body {
-  padding: 8px;
+  padding: 6px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -705,8 +705,20 @@ button svg,
 }
 
 .week-add {
-  width: 20%;
-  max-width: 2rem;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 2px;
+  cursor: pointer;
+  display: flex;
+  opacity: 0;
+  transition: opacity 0.12s ease, color 0.12s ease;
+}
+.week-day-header:hover .week-add {
+  opacity: 1;
+}
+.week-add:hover {
+  color: var(--primary);
 }
 
 /* ---------- Tehtäväkortit ---------- */

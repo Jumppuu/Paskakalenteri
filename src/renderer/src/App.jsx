@@ -105,7 +105,7 @@ export default function App() {
   }, [state.assignments])
 
   const isNewUser = !state.courses.length && !state.assignments.length
-  const showWelcome = !(welcomeDismissed && !isNewUser)
+  const showWelcome = !welcomeDismissed && isNewUser
 
   function showToast(msg) {
     setToast(msg)
