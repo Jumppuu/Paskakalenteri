@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { useLang } from '../LangContext'
 import { parseICS } from '../ics'
+import { fetchScheduleText } from '../scheduleFetch'
 import { SCHEDULE_CACHE_KEY, SCHEDULE_CLASS_KEY, SCHEDULE_CLASSES } from '../storage'
 import { toISODate } from '../utils'
 
@@ -28,6 +29,7 @@ export default function ScheduleView({ scheduleUrl }) {
   const [cache, setCache] = useState(() => loadCache(scheduleUrl))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [viaProxy, setViaProxy] = useState(false)
   const [search, setSearch] = useState('')
   const [showPast, setShowPast] = useState(false)
   const [classFilter, setClassFilter] = useState(
@@ -39,19 +41,15 @@ export default function ScheduleView({ scheduleUrl }) {
   }, [classFilter])
 
   async function refresh(url) {
-    if (!window.api?.fetchSchedule) {
-      setError(t('schedule.unsupported'))
-      return
-    }
-
     setLoading(true)
     setError('')
 
-    const res = await window.api.fetchSchedule(url)
+    const res = await fetchScheduleText(url)
 
     setLoading(false)
 
     if (res?.ok) {
+      setViaProxy(!!res.viaProxy)
       saveCache(url, res.text)
       setCache({ url, text: res.text, fetchedAt: new Date().toISOString() })
     } else {
@@ -170,6 +168,8 @@ export default function ScheduleView({ scheduleUrl }) {
           {t('schedule.lastUpdated', { time: updatedFormatter.format(new Date(cache.fetchedAt)) })}
         </div>
       )}
+
+      {viaProxy && <div className="schedule-notice">{t('schedule.proxyNotice')}</div>}
 
       {error && <div className="schedule-error">{error}</div>}
 

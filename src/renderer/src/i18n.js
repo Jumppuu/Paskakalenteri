@@ -92,6 +92,8 @@ export const I18N = {
     'schedule.empty': 'Ei tapahtumia näytettäväksi.',
     'schedule.fetchError': 'Lukujärjestyksen haku epäonnistui',
     'schedule.unsupported': 'Lukujärjestyksen haku ei ole tuettu tässä ympäristössä',
+    'schedule.proxyNotice':
+      'Haettu julkisen välityspalvelimen (allorigins.win) kautta, koska tämä on selainversio ilman omaa taustapalvelinta. Lukujärjestyslinkkisi kulkee tällöin kolmannen osapuolen kautta.',
     'toast.exportCopied': 'Vientikoodi kopioitu leikepöydälle',
     'toast.exportCreated': 'Vientikoodi luotu – kopioi se tekstikentästä',
     'toast.importPaste': 'Kopioi vientikoodi leikepöydälle tai liitä se tekstikenttään',
@@ -263,6 +265,8 @@ export const I18N = {
     'schedule.empty': 'No events to show.',
     'schedule.fetchError': 'Failed to fetch the schedule',
     'schedule.unsupported': 'Fetching the schedule is not supported in this environment',
+    'schedule.proxyNotice':
+      'Fetched via a public CORS proxy (allorigins.win) because this is a web build with no backend of its own. Your schedule link is sent through that third party in this mode.',
     'toast.exportCopied': 'Export code copied to clipboard',
     'toast.exportCreated': 'Export code created – copy it from the text field',
     'toast.importPaste': 'Copy the export code to the clipboard or paste it into the text field',
