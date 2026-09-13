@@ -5,8 +5,13 @@ export const WELCOME_KEY = 'kurssikalenteri_welcome_seen'
 export const LANG_KEY = 'kurssikalenteri_lang'
 export const SCHEDULE_URL_KEY = 'kurssikalenteri_schedule_url'
 export const SCHEDULE_CACHE_KEY = 'kurssikalenteri_schedule_cache'
+export const SCHEDULE_CLASS_KEY = 'kurssikalenteri_schedule_class'
 export const DEFAULT_SCHEDULE_URL =
   'https://lukkarikone.tuni.fi/ical.php?hash=052C9CEFDC3F1B52D5BF74326634F2D6BB45064B'
+export const SCHEDULE_CLASSES = [
+  { value: 'b', label: '26TietoB', group: '26tietob' },
+  { value: 'a', label: '26TietoA', group: '26tietoa' }
+]
 
 export function loadState() {
   const raw = localStorage.getItem(STORE_KEY)

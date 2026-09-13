@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { useLang } from '../LangContext'
 import { parseICS } from '../ics'
-import { SCHEDULE_CACHE_KEY } from '../storage'
+import { SCHEDULE_CACHE_KEY, SCHEDULE_CLASS_KEY, SCHEDULE_CLASSES } from '../storage'
 import { toISODate } from '../utils'
 
 function loadCache(url) {
@@ -30,6 +30,13 @@ export default function ScheduleView({ scheduleUrl }) {
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [showPast, setShowPast] = useState(false)
+  const [classFilter, setClassFilter] = useState(
+    () => localStorage.getItem(SCHEDULE_CLASS_KEY) || SCHEDULE_CLASSES[0].value
+  )
+
+  useEffect(() => {
+    localStorage.setItem(SCHEDULE_CLASS_KEY, classFilter)
+  }, [classFilter])
 
   async function refresh(url) {
     if (!window.api?.fetchSchedule) {
@@ -67,6 +74,8 @@ export default function ScheduleView({ scheduleUrl }) {
     }
   }, [cache])
 
+  const activeGroup = SCHEDULE_CLASSES.find((c) => c.value === classFilter)?.group
+
   const filtered = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -74,13 +83,14 @@ export default function ScheduleView({ scheduleUrl }) {
 
     return events
       .filter((e) => (showPast ? true : (e.end || e.start) >= today))
+      .filter((e) => !e.groups?.length || !activeGroup || e.groups.includes(activeGroup))
       .filter((e) =>
         q
           ? (e.summary || '').toLowerCase().includes(q) ||
             (e.location || '').toLowerCase().includes(q)
           : true
       )
-  }, [events, search, showPast])
+  }, [events, search, showPast, activeGroup])
 
   const groups = useMemo(() => {
     const map = new Map()
@@ -121,6 +131,18 @@ export default function ScheduleView({ scheduleUrl }) {
   return (
     <div className="schedule-view">
       <div className="list-controls">
+        <div className="view-switch">
+          {SCHEDULE_CLASSES.map((c) => (
+            <button
+              key={c.value}
+              className={classFilter === c.value ? 'active' : ''}
+              onClick={() => setClassFilter(c.value)}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+
         <input
           type="text"
           value={search}

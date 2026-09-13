@@ -20,6 +20,16 @@ function parseICSDate(value) {
   return new Date(Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi), Number(s))
 }
 
+function extractGroups(description) {
+  // Description lines look like "Ryhmä(t): 26tietoa, 26tietob"
+  const m = /Ryhm[äa]\(t\):\s*([^\n]+)/i.exec(description || '')
+  if (!m) return []
+  return m[1]
+    .split(',')
+    .map((g) => g.trim().toLowerCase())
+    .filter(Boolean)
+}
+
 export function parseICS(raw) {
   const lines = unfold(String(raw || '')).split('\n')
   const events = []
@@ -34,7 +44,10 @@ export function parseICS(raw) {
       continue
     }
     if (line === 'END:VEVENT') {
-      if (cur?.start) events.push(cur)
+      if (cur?.start) {
+        cur.groups = extractGroups(cur.description)
+        events.push(cur)
+      }
       cur = null
       continue
     }
