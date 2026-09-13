@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -33,6 +33,29 @@ function createWindow() {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
+
+ipcMain.handle('schedule:fetch', async (_event, url) => {
+  try {
+    const parsed = new URL(url)
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return { ok: false, error: 'Invalid protocol' }
+    }
+
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 15000)
+
+    try {
+      const res = await fetch(parsed.toString(), { signal: controller.signal })
+      if (!res.ok) return { ok: false, error: `HTTP ${res.status}` }
+      const text = await res.text()
+      return { ok: true, text }
+    } finally {
+      clearTimeout(timer)
+    }
+  } catch (err) {
+    return { ok: false, error: err?.message || 'Fetch failed' }
+  }
+})
 
 app.whenReady().then(() => {
   createWindow()

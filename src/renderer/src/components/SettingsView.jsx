@@ -2,9 +2,25 @@ import { useState } from 'react'
 import { exportString, importString } from '../storage'
 import { useLang } from '../LangContext'
 
-export default function SettingsView({ state, setState, showToast, lang, setLang }) {
+export default function SettingsView({
+  state,
+  setState,
+  showToast,
+  lang,
+  setLang,
+  scheduleUrl,
+  setScheduleUrl
+}) {
   const { t } = useLang()
   const [backup, setBackup] = useState('')
+  const [urlDraft, setUrlDraft] = useState(scheduleUrl)
+
+  function saveScheduleUrl() {
+    const value = urlDraft.trim()
+    if (!value) return
+    setScheduleUrl(value)
+    showToast(t('toast.scheduleUrlSaved'))
+  }
 
   async function doExport() {
     const code = exportString(state)
@@ -85,6 +101,23 @@ export default function SettingsView({ state, setState, showToast, lang, setLang
         <div className="settings-row">
           <span>{t('settings.pushNotifications')}</span>
           <input type="checkbox" disabled />
+        </div>
+      </div>
+      <div className="settings-card">
+        <h3>{t('settings.scheduleTitle')}</h3>
+        <p>{t('settings.scheduleDesc')}</p>
+        <input
+          type="text"
+          className="schedule-url-input"
+          value={urlDraft}
+          onChange={(e) => setUrlDraft(e.target.value)}
+          placeholder={t('settings.scheduleUrlPlaceholder')}
+        />
+        <div className="settings-row">
+          <span>{t('settings.scheduleUrlLabel')}</span>
+          <button className="btn small" onClick={saveScheduleUrl}>
+            {t('settings.scheduleSaveBtn')}
+          </button>
         </div>
       </div>
       <div className="settings-card">

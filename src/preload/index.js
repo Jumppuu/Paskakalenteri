@@ -1,5 +1,6 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 
 contextBridge.exposeInMainWorld('api', {
-  platform: process.platform
+  platform: process.platform,
+  fetchSchedule: (url) => ipcRenderer.invoke('schedule:fetch', url)
 })

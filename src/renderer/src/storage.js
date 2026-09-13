@@ -3,6 +3,10 @@ export const THEME_KEY = 'kurssikalenteri_theme'
 export const SIDEBAR_KEY = 'kurssikalenteri_sidebar'
 export const WELCOME_KEY = 'kurssikalenteri_welcome_seen'
 export const LANG_KEY = 'kurssikalenteri_lang'
+export const SCHEDULE_URL_KEY = 'kurssikalenteri_schedule_url'
+export const SCHEDULE_CACHE_KEY = 'kurssikalenteri_schedule_cache'
+export const DEFAULT_SCHEDULE_URL =
+  'https://lukkarikone.tuni.fi/ical.php?hash=052C9CEFDC3F1B52D5BF74326634F2D6BB45064B'
 
 export function loadState() {
   const raw = localStorage.getItem(STORE_KEY)

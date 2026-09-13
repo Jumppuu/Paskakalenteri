@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { COLORS, addDays, currentSemester, parseDate, toISODate, uid } from './utils'
-import { THEME_KEY, SIDEBAR_KEY, WELCOME_KEY, LANG_KEY, loadState, saveState } from './storage'
+import {
+  THEME_KEY,
+  SIDEBAR_KEY,
+  WELCOME_KEY,
+  LANG_KEY,
+  SCHEDULE_URL_KEY,
+  DEFAULT_SCHEDULE_URL,
+  loadState,
+  saveState
+} from './storage'
 import { I18N, makeT } from './i18n'
 import { LangContext } from './LangContext'
 import { courseById } from './components/helpers'
@@ -8,6 +17,7 @@ import CalendarView from './components/CalendarView'
 import TasksView from './components/TasksView'
 import { NotesView } from './components/NotesView'
 import CoursesView from './components/CoursesView'
+import ScheduleView from './components/ScheduleView'
 import SettingsView from './components/SettingsView'
 import AssignmentModal from './components/AssignmentModal'
 import CourseModal from './components/CourseModal'
@@ -15,6 +25,7 @@ import NotesModal from './components/NotesModal'
 import {
   Notebook,
   CalendarDays,
+  CalendarClock,
   ListChecks,
   BookOpen,
   Plus,
@@ -48,6 +59,9 @@ export default function App() {
     const saved = localStorage.getItem(LANG_KEY)
     return I18N[saved] ? saved : 'fi'
   })
+  const [scheduleUrl, setScheduleUrl] = useState(
+    () => localStorage.getItem(SCHEDULE_URL_KEY) || DEFAULT_SCHEDULE_URL
+  )
 
   const [assignmentModal, setAssignmentModal] = useState(null)
   const [notesModal, setNotesModal] = useState(null)
@@ -79,6 +93,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(SIDEBAR_KEY, sidebarCollapsed ? '1' : '0')
   }, [sidebarCollapsed])
+
+  useEffect(() => {
+    localStorage.setItem(SCHEDULE_URL_KEY, scheduleUrl)
+  }, [scheduleUrl])
 
   useEffect(() => {
     if (!toast) return
@@ -529,6 +547,7 @@ export default function App() {
     tasks: t('nav.tasks'),
     courses: t('nav.courses'),
     notes: t('nav.notes'),
+    schedule: t('nav.schedule'),
     settings: t('nav.settings')
   }
 
@@ -583,6 +602,14 @@ export default function App() {
             >
               <Notebook />
               <span>{t('nav.notes')}</span>
+            </button>
+
+            <button
+              className={`nav-btn ${view === 'schedule' ? 'active' : ''}`}
+              onClick={() => goView('schedule')}
+            >
+              <CalendarClock />
+              <span>{t('nav.schedule')}</span>
             </button>
           </nav>
 
@@ -762,6 +789,8 @@ export default function App() {
               />
             )}
 
+            {view === 'schedule' && <ScheduleView scheduleUrl={scheduleUrl} />}
+
             {view === 'settings' && (
               <SettingsView
                 state={state}
@@ -769,6 +798,8 @@ export default function App() {
                 showToast={showToast}
                 lang={lang}
                 setLang={setLang}
+                scheduleUrl={scheduleUrl}
+                setScheduleUrl={setScheduleUrl}
               />
             )}
           </section>

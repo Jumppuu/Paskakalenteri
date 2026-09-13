@@ -1060,6 +1060,80 @@ button svg,
   border-radius: 8px;
 }
 
+/* ---------- Lukujärjestys ---------- */
+.schedule-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.schedule-updated {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.schedule-error {
+  font-size: 13px;
+  color: var(--danger);
+  margin-bottom: 10px;
+}
+.schedule-card {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 5px;
+  background: var(--surface);
+  border-left: 2px solid var(--primary);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.schedule-card:hover {
+  background: var(--surface-2);
+}
+.schedule-time {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 108px;
+}
+.schedule-main {
+  min-width: 0;
+}
+.schedule-title {
+  font-weight: 600;
+  font-size: 14.5px;
+  overflow-wrap: anywhere;
+}
+.schedule-location {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.spin {
+  animation: schedule-spin 1s linear infinite;
+}
+@keyframes schedule-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.schedule-url-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  background: var(--surface);
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
 /* ---------- Tyhjä tila ---------- */
 .empty-state {
   text-align: left;
